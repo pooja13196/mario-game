@@ -9,145 +9,240 @@ var obstaclesGroup, obstacles1, obstacles2, obstacles3, obstacles4, obstacles5
 var score = 0
 var mario1
 var obstacle1img,obstacle2img,obstacle3img,obstacle4img,obstacle5img
-var gameOver, restart
+var gameOver,gameOverImg,restart,restartImg;
+var invisibleGround;
 var coinGroup, coinImg, coin
 var bgImg
 
 function preload() {
-    mario_running = loadAnimation("./mario.png")
-    mario1=loadImage("./mario.png");
-    mario_collided = loadAnimation("./mario_colided.png")
-    groundImg = loadImage("./ground2.jpg")
-    obstacle1img = loadImage("./obstacle1.png")
-    obstacle2img = loadImage("./obstacle2.jpg")
-    obstacle3img = loadImage("./obstacle3.png")
-    obstacle4img = loadImage("./obstacle4.png")
-    obstacle5img = loadImage("./obstacle5.png")
-    coinImg = loadImage("./coin.png")
-    bgImg = loadImage("./bg.png")
+    mario_running = loadAnimation("mario.png")
+    mario1=loadImage("mario.png");
+    mario_collided = loadAnimation("mario_colided.png")
+    groundImg = loadImage("ground.png")
+    obstacle1img = loadImage("obstacle1.png")
+    obstacle2img = loadImage("obstacle2.jpg")
+    obstacle3img = loadImage("obstacle3.png")
+    obstacle4img = loadImage("obstacle4.png")
+    obstacle5img = loadImage("obstacle5.png")
+    coinImg = loadImage("coin.png")
+    backgroundImg=loadImage("background.png")
+    bananaImage = loadImage("banana.png");
+    gameOverImg=loadImage("gameOver.png");
+    restartImg=loadImage("restart.png");
+    sunImg=loadImage("sun.png");
 }
 
 function setup() {
-    createCanvas(800, 800)
-    mario = createSprite(50, 170, 20, 50)
-    mario.addAnimation("running", mario_running)
+    createCanvas(1000, 600)
+    mario=createSprite(50,400,20,50);
+    mario.addAnimation("mario",mario_running);
+    mario.scale=0.5;
+    
+    ground=createSprite(400,height-1,800,10);
+    ground.addImage(groundImg);
+    
+    invisibleGround=createSprite(100,630,1000,10);
+    invisibleGround.visible=false;
+    
+    sun=createSprite(700,30,10,10);
+    sun.addImage(sunImg);
+    sun.scale=0.1;
+    
+    gameOver = createSprite(200,150,50, 50);
+    gameOver.addImage(gameOverImg);
+    
+    restart = createSprite(200,200,50,50);
+    restart.addImage(restartImg);
+    restart.scale=0.1;
     console.log(mario);
     console.log("mario image loaded !");
     mario.addAnimation("collided", mario_collided)
 
-    ground = createSprite(200, 150, 400, 20)
-    ground.addImage("ground", groundImg)
-    ground.x = ground.width / 2
-
-
-    obstaclesGroup = new Group()
-    coinGroup = new Group()
+    
+    obstaclesGroup = createGroup()
+    coinGroup = createGroup()
+    FoodGroup=createGroup();
 
     score = 0
 
 
+    mario.setCollider("circle",0,0,300)
 
 
 }
 
 
 function draw() {
-    background("white")
-    text("score" + score, 500, 50);
-    if (gameState === PLAY) {
-        score = score + Math.round(getFrameRate() / 600)
-        mario.changeAnimation("running", mario_running)
+    background(backgroundImg)
+    stroke("black");
+  textSize(20);  
+  fill("blue");
+  text("Survival Time: "+score,110,100);
+  
+  if(gameState===PLAY){
+    text("Get bonus 100 points for banana",50,50);
+    
+    gameOver.visible=false;
+    restart.visible=false;
+    
+   score=score + Math.round(frameCount/200); 
+    
+    ground.velocityX=-(3 + score/100);
+    
+    
+  if(ground.x<0){
+   ground.x=ground.width/2; 
+  }
+    
+    if(keyDown("space")||keyDown("UP_ARROW")||keyDown("RIGHT_ARROW")&&mario.y>280){
+   mario.velocityY=-8; 
+   mario.velocityX= +1;
+  }
+    
+   
+    mario.velocityY=mario.velocityY+0.3;
+    
+   obstacles1()
+   obstacles2()
+   obstacles3()
+   obstacles4()
+   obstacles5()
+   food();
 
-        if (keyDown(UP_ARROW) && mario.y >= 150) {
-            mario.velocityY = -12
+   
+   if(FoodGroup.isTouching(mario)){
+    FoodGroup.destroyEach();
+    score=score+100;  
+  }
+  
+    if(obstaclesGroup.isTouching(mario)){
+      gameState=END;
 
-        }
-        mario.velocityY = mario.velocityY + 0.8
-        if (keyDown(RIGHT_ARROW)) {
-            mario.velocityX = +5
-        }
-      //  if (ground.x < 0) {
-        //    ground.x = ground.width / 2
-        //}
-        mario.collide(ground)
-        obstacles1()
-        obstacles2()
-        obstacles3()
-        obstacles4()
-        obstacles5()
-
-        if (obstaclesGroup.isTouching(mario)) {
-            gameState = END
-        }
-
-    }
-    drawSprites()
-
-
+   }  
+  
+}else if(gameState===END){
+  
+ 
 }
+  
+mario.collide(invisibleGround);
+  
+  drawSprites();
+}
+
+function reset(){
+  
+ 
+  
+  
+} 
+
+function food(){
+    if(frameCount%80===0){
+      banana=createSprite(390,300,50,50);
+      banana.y=Math.round(random(200,250));
+      banana.addImage(bananaImage);
+      banana.scale=0.15;
+      banana.velocityX=-(3 + score/300);
+      banana.lifetime=100;
+      
+      mario.depth=banana.depth;
+      mario.depth=mario.depth+1;
+      
+      
+      FoodGroup.add(banana);
+      
+    }
+   }
 function obstacles1() {
-    if (frameCount % 100 === 0) {
-        var obstacle1 = createSprite(600, 500, 10, 40)
-        obstacle1.velocityX = -1
-
-        obstacle1.y = Math.round(random(120, 150));
-        obstacle1.addImage(obstacle1img)
-
-        obstacle1.scale = 0.3
-        obstacle1.lifetime = 300
+    if(frameCount%320===0){
+        obstacle1=createSprite(370,300,20,20);
+        obstacle1.addImage(obstacle1img);
+        obstacles1.y=Math.round(random(10,220))
+        //obstacle1.scale=0.15;
+        obstacle1.velocityX=-(3 + score/100);
+        obstacle1.lifetime=100;
+         
+         mario.depth=obstacle1.depth;
+         
+         
+         obstaclesGroup.add(obstacle1);
+         
+         obstacle1.setCollider("circle",0,0,200)
+        // obstacle.debug=true;
     }
 
 }
 
 function obstacles2() {
-    if (frameCount % 80 === 0) {
-        var obstacle2 = createSprite(500, 500, 10, 40)
-        obstacle2.velocityX = -3
-
-        obstacle2.y = Math.round(random(300, 300));
-        obstacle2.addImage(obstacle2img)
-
-        obstacle2.scale = 0.3
-        obstacle2.lifetime = 300
+    if(frameCount%100===0){
+        obstacle2=createSprite(370,300,20,20);
+        obstacle2.addImage(obstacle2img);
+        obstacle2.scale=0.8;
+        obstacle2.velocityX=-(3 + score/100);
+        obstacle2.lifetime=100;
+         
+         mario.depth=obstacle2.depth;
+         
+         
+         obstaclesGroup.add(obstacle2);
+         
+         obstacle2.setCollider("circle",0,0,200)
+        // obstacle.debug=true;
     }
 
 }
 function obstacles3() {
-    if (frameCount % 150 === 0) {
-        var obstacle3 = createSprite(700, 500, 10, 40)
-        obstacle3.velocityX = -2
-
-        obstacle3.y = Math.round(random(80, 90));
-        obstacle3.addImage(obstacle3img)
-
-        obstacle3.scale = 0.08
-        obstacle3.lifetime = 300
+    if(frameCount%200===0){
+        obstacle3=createSprite(370,300,20,20);
+        obstacle3.addImage(obstacle3img);
+       // obstacle3.scale=0.15;
+        obstacle3.velocityX=-(3 + score/100);
+        obstacle3.lifetime=100;
+         
+         mario.depth=obstacle3.depth;
+         
+         
+         obstaclesGroup.add(obstacle3);
+         
+         obstacle3.setCollider("circle",0,0,200)
+        // obstacle.debug=true;
     }
 
 }
 function obstacles4() {
-    if (frameCount % 120 === 0) {
-        var obstacle4 = createSprite(700, 120, 10, 40)
-        obstacle4.velocityX = -1
-
-        obstacle4.x = Math.round(random(120, 300));
-        obstacle4.addImage(obstacle4img)
-
-        obstacle4.scale = 0.3
-        obstacle4.lifetime = 300
+    if(frameCount%80===0){
+        obstacle4=createSprite(370,300,20,20);
+        obstacle4.addImage(obstacle4img);
+        //obstacle4.scale=0.15;
+        obstacle4.velocityX=-(3 + score/100);
+        obstacle4.lifetime=100;
+         
+         mario.depth=obstacle4.depth;
+         
+         
+         obstaclesGroup.add(obstacle4);
+         
+         obstacle4.setCollider("circle",0,0,200)
+        // obstacle.debug=true;
     }
 
 }
 function obstacles5() {
-    if (frameCount % 300 === 0) {
-        var obstacle5 = createSprite(600, 165, 10, 40)
-        obstacle5.velocityX = -1
-
-        obstacle5.y = Math.round(random(10, 120));
-        obstacle5.addImage(obstacle5img)
-
-        obstacle5.scale = 0.3
-        obstacle5.lifetime = 300
+    if(frameCount%280===0){
+        obstacle5=createSprite(370,300,20,20);
+        obstacle5.addImage(obstacle5img);
+       // obstacle5.scale=0.15;
+        obstacle5.velocityX=-(3 + score/100);
+        obstacle5.lifetime=100;
+         
+         mario.depth=obstacle5.depth;
+         
+         
+         obstaclesGroup.add(obstacle5);
+         
+         obstacle5.setCollider("circle",0,0,200)
+        // obstacle.debug=true;
 
     }
 
